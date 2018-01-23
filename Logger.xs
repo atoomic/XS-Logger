@@ -63,11 +63,10 @@ do_log(MyLogger *mylogger, logLevel level, const char *fmt, int num_args, ...) {
 	/* Note: *mylogger can be a NULL pointer => would fall back to a GV string or a constant from .c to get the filename */
 
 	if ( mylogger ) { /* we got a mylogger pointer */
-		if ( mylogger->filepath && strlen(mylogger->filepath) )
+		if ( mylogger->filepath > 0 && strlen(mylogger->filepath) )
 			path = mylogger->filepath;
-		else {
+		else
 			path = get_default_file_path();
-		}
 
 		pid = getpid();
 		if ( mylogger->pid && mylogger->pid != pid ) {
