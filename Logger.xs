@@ -47,9 +47,12 @@ do_log(MyLogger *mylogger, logLevel level, const char *fmt, int num_args, ...) {
     bool hold_lock = false;
     pid_t pid;
     localtime_r(&t, &lt);
+
     if ( level == LOG_DISABLE ) /* to move earlier */
         return;
+
     buf[strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &lt)] = '\0';
+
     /* Note: *mylogger can be a NULL pointer => would fall back to a GV string or a constant from .c to get the filename */
     if ( mylogger ) { /* we got a mylogger pointer */
         if ( mylogger->filepath > 0 && strlen(mylogger->filepath) )
@@ -79,6 +82,7 @@ do_log(MyLogger *mylogger, logLevel level, const char *fmt, int num_args, ...) {
         ACQUIRE_LOCK_ONCE(fhandle); /* get a lock before moving to the end */
         fseek(fhandle, 0, SEEK_END);
     }
+
     if ( fhandle ) {
         va_list args;
         int abs_gmtoff = lt.tm_gmtoff >= 0 ? lt.tm_gmtoff : -1 * lt.tm_gmtoff;
@@ -120,8 +124,11 @@ do_log(MyLogger *mylogger, logLevel level, const char *fmt, int num_args, ...) {
         if (has_logger_object) fflush(fhandle); /* otherwise we are going to close the ffhandle just after */
         if (num_args) va_end(args);
     }
+
     RELEASE_LOCK(fhandle); /* only release if acquired before */
+
     if ( !has_logger_object ) fclose( fhandle );
+
     return;
 }
 
@@ -139,6 +146,7 @@ PREINIT:
 CODE:
 {
     char tmpbuf[256] = {0};
+
     /* mylogger = malloc(sizeof(MyLogger)); */ /* malloc our object */
     Newxz( mylogger, 1, MyLogger);
     RETVAL = newSViv(0);
@@ -148,6 +156,7 @@ CODE:
         if ( SvROK(extra) && SvTYPE(SvRV(extra)) == SVt_PVHV )
             opts = (HV*) SvRV( extra );
     }
+
     /* default (non zero) values */
     mylogger->use_color = true; /* maybe use a GV from the stash to set the default value */
     if ( opts ) {
@@ -162,6 +171,7 @@ CODE:
         if ( (svp = hv_fetchs(opts, "logfile", FALSE)) || (svp = hv_fetchs(opts, "path", FALSE)) ) {
             STRLEN len;
             char *src;
+
             if (!SvPOK(*svp)) croak("invalid logfile path: must be a string");
             src = SvPV(*svp, len);
             if (len >= sizeof(mylogger->filepath))
@@ -169,6 +179,7 @@ CODE:
             strcpy(mylogger->filepath, src); /* do a copy to the object */
         }
     }
+
     sv_setiv(obj, PTR2IV(mylogger)); /* get a pointer to our malloc object */
     SvREADONLY_on(obj);
 }
@@ -195,6 +206,7 @@ CODE:
      MyLogger* mylogger = NULL; /* can be null when not called on an object */
      int args_start_at = 0;
      bool should_die = false;
+
      switch (ix) {
          case 1: /* info */
              level = LOG_INFO;
@@ -220,6 +232,7 @@ CODE:
          default:
             level = LOG_DISABLE;
      }
+
      /* check if called as function or method call */
      if ( items && SvROK(ST(0)) && SvOBJECT(SvRV(ST(0))) ) { /* check if self is an object */
         self = ST(0);
@@ -229,6 +242,7 @@ CODE:
         if ( level < mylogger->level )
             dolog = false;
      }
+
      if (dolog) {
         SV **list;
         if ( items < (1 + args_start_at) ) { /* */
@@ -239,6 +253,7 @@ CODE:
             IV i;
             I32 nitems = items - args_start_at; /* for self */
             const char *fmt;
+
             MultiValue targs[10]; /* no need to malloc limited to 10 */
             //Newx(list, nitems, SV*);
             for ( i = args_start_at ; i < items ; ++i ) {
@@ -257,6 +272,7 @@ CODE:
                         fmt = SvPV_nolen( sv );
                     } else {
                         int ix = i - 1 - args_start_at;
+
                         if ( SvIOK(sv) ) { /* SvTYPE(sv) == SVt_IV */
                             targs[ix].ival = SvIV(sv);
                         } else if ( SvNOK(sv) ) { // not working for now
@@ -335,6 +351,7 @@ CODE:
             croak("Too many args to the caller (max=10).");
         }
      }
+
      if ( should_die ) /* maybe fatal needs to exit */
         croak( "XS::Logger - die/fatal event logged" );
      /* no need to return anything there */
@@ -353,6 +370,7 @@ PREINIT:
 CODE:
 {   /* some getters: mainly used for test for now to access internals */
     mylogger = INT2PTR(MyLogger*, SvIV(SvRV(self)));
+
     switch (ix) {
         case 1:
              RETVAL = newSViv( mylogger->pid );
@@ -381,6 +399,7 @@ PREINIT:
 CODE:
 {   /* improve protection on self/logger here */
     mylogger = INT2PTR(MyLogger*, SvIV(SvRV(self)));
+
     switch (ix) {
         case 1:
             if ( !SvIOK(value) ) croak("invalid level: must be interger.");
@@ -389,6 +408,7 @@ CODE:
         default:
              croak("undefined setter");
      }
+
      XSRETURN_EMPTY;
 }
 
@@ -400,6 +420,7 @@ PREINIT:
 PPCODE:
 {
         temp = PL_markstack_ptr++;
+
         if ( self && SvROK(self) && SvOBJECT(SvRV(self)) ) { /* check if self is an object */
             mylogger = INT2PTR(MyLogger*, SvIV(SvRV(self)));
             /* close the file fhandle on destroy if exists */
@@ -408,12 +429,14 @@ PPCODE:
             /* free the logger... maybe more to clear from struct */
             free(mylogger);
         }
+
         if (PL_markstack_ptr != temp) {
             /* truly void, because dXSARGS not invoked */
             PL_markstack_ptr = temp;
             XSRETURN_EMPTY;
             /* return empty stack */
         }  /* must have used dXSARGS; list context implied */
+
         return;  /* assume stack size is correct */
 }
 
@@ -422,6 +445,7 @@ BOOT:
     HV *stash;
     SV *sv;
     stash = gv_stashpvn("XS::Logger", 10, TRUE);
+
     newCONSTSUB(stash, "_loaded", newSViv(1) );
     newCONSTSUB(stash, "DEBUG_LOG_LEVEL", newSViv( LOG_DEBUG ) );
     newCONSTSUB(stash, "INFO_LOG_LEVEL", newSViv( LOG_INFO ) );
