@@ -26,10 +26,12 @@ char*
 get_default_file_path() {
     char *path;
     SV   *sv = get_sv( "XS::Logger::PATH_FILE", 0 );
+
     if ( sv && SvPOK(sv) )
         path = SvPV_nolen( sv );
     else
         path = (char *) DEFAULT_LOG_FILE; /* fallback to default path */
+
     return path;
 }
 
@@ -46,6 +48,7 @@ do_log(MyLogger *mylogger, logLevel level, const char *fmt, int num_args, ...) {
     bool has_logger_object = true;
     bool hold_lock = false;
     pid_t pid;
+
     localtime_r(&t, &lt);
 
     if ( level == LOG_DISABLE ) /* to move earlier */
@@ -53,23 +56,25 @@ do_log(MyLogger *mylogger, logLevel level, const char *fmt, int num_args, ...) {
 
     buf[strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &lt)] = '\0';
 
+    pid = getpid();
+
     /* Note: *mylogger can be a NULL pointer => would fall back to a GV string or a constant from .c to get the filename */
     if ( mylogger ) { /* we got a mylogger pointer */
         if ( mylogger->filepath > 0 && strlen(mylogger->filepath) )
             path = mylogger->filepath;
         else
             path = get_default_file_path();
-        pid = getpid();
+
         if ( mylogger->pid && mylogger->pid != pid ) {
             if (mylogger->fhandle) fclose(mylogger->fhandle);
             mylogger->fhandle = NULL;
         }
         if ( ! mylogger->fhandle ) {
-            /* FIXME -- probably do not use PerlIO layer at all */
             if ( (fhandle = fopen( path, "a" )) == NULL ) /* open in append mode */
                 croak("Failed to open file \"%s\"", path);
             mylogger->fhandle = fhandle; /* save the fhandle for future reuse */
             mylogger->pid = pid; /* store the pid which open the file */
+
             ACQUIRE_LOCK_ONCE(fhandle); /* get a lock before moving to the end */
             fseek(fhandle, 0, SEEK_END);
         }
@@ -77,8 +82,10 @@ do_log(MyLogger *mylogger, logLevel level, const char *fmt, int num_args, ...) {
     } else {
         path = get_default_file_path();
         has_logger_object = false;
+
         if ( (fhandle = fopen( path, "a" )) == NULL ) /* open in append mode */
             croak("Failed to open file \"%s\"", path);
+
         ACQUIRE_LOCK_ONCE(fhandle); /* get a lock before moving to the end */
         fseek(fhandle, 0, SEEK_END);
     }
@@ -87,7 +94,9 @@ do_log(MyLogger *mylogger, logLevel level, const char *fmt, int num_args, ...) {
         va_list args;
         int abs_gmtoff = lt.tm_gmtoff >= 0 ? lt.tm_gmtoff : -1 * lt.tm_gmtoff;
         if (num_args) va_start(args, num_args);
+
         ACQUIRE_LOCK_ONCE(fhandle);
+
         /* write the message */
         /* header: [timestamp tz] pid LEVEL */
         if ( mylogger && mylogger->use_color ) {
@@ -110,6 +119,7 @@ do_log(MyLogger *mylogger, logLevel level, const char *fmt, int num_args, ...) {
         }
         {
             int len = 0;
+
             //PerlIO_printf( PerlIO_stderr(), "# num_args %d\n", num_args );
             if ( fmt && (len=strlen(fmt)) ) {
                 if (num_args == 0)  /* no need to use sprintf when not needed */
@@ -147,12 +157,13 @@ CODE:
 {
     char tmpbuf[256] = {0};
 
-    /* mylogger = malloc(sizeof(MyLogger)); */ /* malloc our object */
-    Newxz( mylogger, 1, MyLogger);
+    Newxz( mylogger, 1, MyLogger); /* malloc our object */
     RETVAL = newSViv(0);
     obj = newSVrv(RETVAL, class); /* bless our object */
+
     if( items > 1 ) { /* could also probably use va_start, va_list, ... */
         SV *extra = (SV*) ST(1);
+
         if ( SvROK(extra) && SvTYPE(SvRV(extra)) == SVt_PVHV )
             opts = (HV*) SvRV( extra );
     }
@@ -285,6 +296,7 @@ CODE:
                     }
                 }
             }
+            /* not really necessary but probaby better for performance */
             switch ( nitems ) {
                 case 1:
                 do_log( mylogger, level, fmt, nitems,
@@ -354,6 +366,7 @@ CODE:
 
      if ( should_die ) /* maybe fatal needs to exit */
         croak( "XS::Logger - die/fatal event logged" );
+
      /* no need to return anything there */
      XSRETURN_EMPTY;
 }
@@ -453,6 +466,7 @@ BOOT:
     newCONSTSUB(stash, "ERROR_LOG_LEVEL", newSViv( LOG_ERROR ) );
     newCONSTSUB(stash, "FATAL_LOG_LEVEL", newSViv( LOG_FATAL ) );
     newCONSTSUB(stash, "DISABLE_LOG_LEVEL", newSViv( LOG_DISABLE ) );
+
     sv = get_sv("XS::Logger::PATH_FILE", GV_ADD|GV_ADDMULTI);
     if ( ! SvPOK(sv) ) { /* preserve any value set before loading the module */
         SvREFCNT_inc(sv);

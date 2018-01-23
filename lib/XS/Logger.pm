@@ -40,11 +40,11 @@ XS::Logger - basic logger using XS
 
     $XS::Logger::PATH_FILE = "/var/log/xslogger.log"; # default file path
 
-    XS::Logger::info( "something to log" );
-    XS::Logger::warn( "something to warn" );
-    XS::Logger::error( "something to warn" );
+    XS::Logger::info(  "something to log" );
+    XS::Logger::warn(  "something to warn" );
+    XS::Logger::error( "your error message: %d", 404 );
 
-    XS::Logger::die( "something to log & die" );
+    XS::Logger::die(   "something to log & die" );
     XS::Logger::panic( "something to log & panic" );
     XS::Logger::fatal( "something to log & fatal" );
     XS::Logger::debug( "something to debug" );
