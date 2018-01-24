@@ -17,6 +17,9 @@ static const char *DEFAULT_LOG_FILE = "/var/log/xslogger.log";
 static const char *LOG_LEVEL_NAMES[] = {
   "DEBUG", "INFO", "WARN", "ERROR", "FATAL" /* , "DISABLE" */
 };
+static const char *LOG_LEVEL_NAMES_lc[] = {
+  "debug", "info", "warn", "error", "fatal" /* , "disable" */
+};
 static const char *END_COLOR = "\x1b[0m";
 static const char *LEVEL_COLORS[] = {
   "\x1b[94m", "\x1b[36m", "\x1b[33m", "\x1b[1;31m", "\x1b[1;35m" /* "\x1b[1;35m"  */
@@ -97,25 +100,39 @@ do_log(MyLogger *mylogger, logLevel level, const char *fmt, int num_args, ...) {
 
         ACQUIRE_LOCK_ONCE(fhandle);
 
+
         /* write the message */
         /* header: [timestamp tz] pid LEVEL */
         if ( mylogger && mylogger->use_color ) {
-            fprintf( fhandle, "[%s %s%02d%02d] %u %s%-5s%s: ",
+            fprintf( fhandle, "[%s %s%02d%02d] %s%-5s%s",
                  buf,
                 lt.tm_gmtoff >= 0 ? "+" : "-",
                  (int) abs_gmtoff / 3600,
                 ( abs_gmtoff % 3600) / 60,
-                 (unsigned int) pid,
                  LEVEL_COLORS[level], LOG_LEVEL_NAMES[level], END_COLOR
             );
         } else {
-            fprintf( fhandle, "[%s %s%02d%02d] %u %-5s: ",
+            fprintf( fhandle, "[%s %s%02d%02d] %-5s",
                  buf,
                  lt.tm_gmtoff >= 0 ? "+" : "-",
                  (int) abs_gmtoff / 3600, ( abs_gmtoff % 3600) / 60,
-                 (unsigned int) pid,
                  LOG_LEVEL_NAMES[level]
             );
+        }
+        {
+            SV *const dollar_0 = get_sv("0",GV_ADDWARN); /* $0 - application name */
+            char *str_dollar_0;
+
+            if ( !SvPOK(dollar_0) ) { /* probably a better helper to simply get the PV at all cost */
+                if ( SvIOK(dollar_0) )
+                    SvUPGRADE(dollar_0, SVt_PVIV);
+                else
+                    croak("dollar_0 is not a string?!");
+            }
+            str_dollar_0 = SvPV_nolen( dollar_0 );
+            fprintf( fhandle, " %u [%s] ", (unsigned int) pid, str_dollar_0 ); /* print the source */
+            /* with the pid ? */
+            /* fprintf( fhandle, " [%u %s] ", (unsigned int) pid, str_dollar_0 ); */
         }
         {
             int len = 0;
@@ -364,8 +381,11 @@ CODE:
         }
      }
 
-     if ( should_die ) /* maybe fatal needs to exit */
-        croak( "XS::Logger - die/fatal event logged" );
+     if ( should_die ) /* maybe fatal needs to exit */ {
+         /* FIXME: need to adjust the croak message to match something like this */
+        /* exit level [panic] [pid=6904] (This is a message) */
+        croak( "exit level [%s] [pid=%d] (%s)\n", LOG_LEVEL_NAMES_lc[level], getpid(), "custom message..." ); /* FIXME */
+     }
 
      /* no need to return anything there */
      XSRETURN_EMPTY;
