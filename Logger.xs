@@ -25,6 +25,8 @@ static const char *LEVEL_COLORS[] = {
   "\x1b[94m", "\x1b[36m", "\x1b[33m", "\x1b[1;31m", "\x1b[1;35m" /* "\x1b[1;35m"  */
 };
 
+static const char *EMPTY_STR = "";
+
 char*
 get_default_file_path() {
     char *path;
@@ -239,6 +241,8 @@ CODE:
      MyLogger* mylogger = NULL; /* can be null when not called on an object */
      int args_start_at = 0;
      bool should_die = false;
+     const char *fmt;
+     MultiValue targs[10] = {0}; /* no need to malloc limited to 10 */
 
      switch (ix) {
          case 1: /* info */
@@ -278,15 +282,12 @@ CODE:
 
      if (dolog) {
         SV **list;
-        if ( items < (1 + args_start_at) ) { /* */
-            /* maybe croak ?? */
-            //croak("Need more args")
-            do_log( mylogger, level, "", 0 ); /* do a simple call */
+        if ( items < (1 + args_start_at) ) {
+            fmt = EMPTY_STR;
+            do_log( mylogger, level, fmt, 0 ); /* do a simple call */
         } else if ( items <= ( 11 + args_start_at ) ) { /* set a cap on the maximum of item we can use: 10 arguments + 1 format + 1 for self */
             IV i;
             I32 nitems = items - args_start_at; /* for self */
-            const char *fmt;
-            MultiValue targs[10] = {0}; /* no need to malloc limited to 10 */
 
             //Newx(list, nitems, SV*);
             for ( i = args_start_at ; i < items ; ++i ) {
@@ -384,12 +385,14 @@ CODE:
         } else {
             croak("Too many args to the caller (max=10).");
         }
-     }
+     } /* end of dolog */
 
      if ( should_die ) /* maybe fatal needs to exit */ {
-         /* FIXME: need to adjust the croak message to match something like this */
+         /* FIXME: right now only using the fmt without the args */
         /* exit level [panic] [pid=6904] (This is a message) */
-        croak( "exit level [%s] [pid=%d] (%s)\n", LOG_LEVEL_NAMES_lc[level], getpid(), "custom message..." ); /* FIXME */
+        croak( "exit level [%s] [pid=%d] (%s)\n", LOG_LEVEL_NAMES_lc[level], getpid(),
+            fmt
+        );
      }
 
      /* no need to return anything there */
