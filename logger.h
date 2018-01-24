@@ -50,4 +50,10 @@ void do_log(MyLogger *mylogger, logLevel level, const char *fmt, int num_args, .
 #define ACQUIRE_LOCK_ONCE(f) if ( hold_lock == false ) { flock( fileno(f), LOCK_EX ); hold_lock = true; }
 #define RELEASE_LOCK(f) if ( hold_lock == true ) flock( fileno(f), LOCK_UN );
 
+/* https://gcc.gnu.org/onlinedocs/gcc/Variadic-Macros.html */
+/* print on provided fh + stderr as a bonus */
+#define M_FPRINTF(fh, format, ...) { fprintf(fh, format, __VA_ARGS__); if (print_on_stderr == true) fprintf(stderr, format, __VA_ARGS__); }
+#define M_VFPRINTF(fh, format, args) { vfprintf(fh, format, args); if (print_on_stderr == true) vfprintf(stderr, format, args); }
+#define M_FPUTS(format, fh) { fputs( format, fh ); if (print_on_stderr == true) fputs( format, stderr ); }
+
 #endif /* XS_LOGGER_H */

@@ -51,6 +51,7 @@ do_log(MyLogger *mylogger, logLevel level, const char *fmt, int num_args, ...) {
     bool has_logger_object = true;
     bool hold_lock = false;
     pid_t pid;
+    bool print_on_stderr = false; /* FIXME need to be true by default */
 
     localtime_r(&t, &lt);
 
@@ -100,11 +101,10 @@ do_log(MyLogger *mylogger, logLevel level, const char *fmt, int num_args, ...) {
 
         ACQUIRE_LOCK_ONCE(fhandle);
 
-
         /* write the message */
         /* header: [timestamp tz] pid LEVEL */
         if ( mylogger && mylogger->use_color ) {
-            fprintf( fhandle, "[%s %s%02d%02d] %s%-5s%s",
+            M_FPRINTF( fhandle, "[%s %s%02d%02d] %s%-5s%s",
                  buf,
                 lt.tm_gmtoff >= 0 ? "+" : "-",
                  (int) abs_gmtoff / 3600,
@@ -112,7 +112,7 @@ do_log(MyLogger *mylogger, logLevel level, const char *fmt, int num_args, ...) {
                  LEVEL_COLORS[level], LOG_LEVEL_NAMES[level], END_COLOR
             );
         } else {
-            fprintf( fhandle, "[%s %s%02d%02d] %-5s",
+            M_FPRINTF( fhandle, "[%s %s%02d%02d] %-5s",
                  buf,
                  lt.tm_gmtoff >= 0 ? "+" : "-",
                  (int) abs_gmtoff / 3600, ( abs_gmtoff % 3600) / 60,
@@ -130,7 +130,7 @@ do_log(MyLogger *mylogger, logLevel level, const char *fmt, int num_args, ...) {
                     croak("dollar_0 is not a string?!");
             }
             str_dollar_0 = SvPV_nolen( dollar_0 );
-            fprintf( fhandle, " %u [%s] ", (unsigned int) pid, str_dollar_0 ); /* print the source */
+            M_FPRINTF( fhandle, " %u [%s] ", (unsigned int) pid, str_dollar_0 ); /* print the source */
             /* with the pid ? */
             /* fprintf( fhandle, " [%u %s] ", (unsigned int) pid, str_dollar_0 ); */
         }
@@ -140,13 +140,13 @@ do_log(MyLogger *mylogger, logLevel level, const char *fmt, int num_args, ...) {
             //PerlIO_printf( PerlIO_stderr(), "# num_args %d\n", num_args );
             if ( fmt && (len=strlen(fmt)) ) {
                 if (num_args == 0)  /* no need to use sprintf when not needed */
-                    fputs( fmt, fhandle );
+                    M_FPUTS( fmt, fhandle )
                 else
-                    vfprintf( fhandle, fmt, args );
+                    M_VFPRINTF( fhandle, fmt, args )
             }
             // only add "\n" if missing from fmt
             if ( !len || fmt[len-1] != '\n')
-                fputs( "\n", fhandle );
+                M_FPUTS( "\n", fhandle );
         }
         if (has_logger_object) fflush(fhandle); /* otherwise we are going to close the ffhandle just after */
         if (num_args) va_end(args);
@@ -281,8 +281,8 @@ CODE:
             IV i;
             I32 nitems = items - args_start_at; /* for self */
             const char *fmt;
+            MultiValue targs[10] = {0}; /* no need to malloc limited to 10 */
 
-            MultiValue targs[10]; /* no need to malloc limited to 10 */
             //Newx(list, nitems, SV*);
             for ( i = args_start_at ; i < items ; ++i ) {
                 SV *sv = ST(i);
