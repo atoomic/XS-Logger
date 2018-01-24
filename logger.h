@@ -37,6 +37,7 @@ typedef union {
 
 typedef struct {
 	bool use_color;
+	bool quiet; /* do not display messages on stderr when quiet mode enabled */
 	pid_t pid;
 	FILE *fhandle;
 	char filepath[256];
@@ -52,8 +53,8 @@ void do_log(MyLogger *mylogger, logLevel level, const char *fmt, int num_args, .
 
 /* https://gcc.gnu.org/onlinedocs/gcc/Variadic-Macros.html */
 /* print on provided fh + stderr as a bonus */
-#define M_FPRINTF(fh, format, ...) { fprintf(fh, format, __VA_ARGS__); if (print_on_stderr == true) fprintf(stderr, format, __VA_ARGS__); }
-#define M_VFPRINTF(fh, format, args) { vfprintf(fh, format, args); if (print_on_stderr == true) vfprintf(stderr, format, args); }
-#define M_FPUTS(format, fh) { fputs( format, fh ); if (print_on_stderr == true) fputs( format, stderr ); }
+#define M_FPRINTF(fh, format, ...) { fprintf(fh, format, __VA_ARGS__); if (quiet == false) fprintf(stderr, format, __VA_ARGS__); }
+#define M_VFPRINTF(fh, format, args) { vfprintf(fh, format, args); if (quiet == false) vfprintf(stderr, format, args); }
+#define M_FPUTS(format, fh) { fputs( format, fh ); if (quiet == false) fputs( format, stderr ); }
 
 #endif /* XS_LOGGER_H */

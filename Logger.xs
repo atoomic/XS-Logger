@@ -51,7 +51,7 @@ do_log(MyLogger *mylogger, logLevel level, const char *fmt, int num_args, ...) {
     bool has_logger_object = true;
     bool hold_lock = false;
     pid_t pid;
-    bool print_on_stderr = false; /* FIXME need to be true by default */
+    bool quiet = false; /* do not display messages on stderr when quiet mode enabled */
 
     localtime_r(&t, &lt);
 
@@ -83,6 +83,7 @@ do_log(MyLogger *mylogger, logLevel level, const char *fmt, int num_args, ...) {
             fseek(fhandle, 0, SEEK_END);
         }
         fhandle = mylogger->fhandle;
+        quiet   = mylogger->quiet;
     } else {
         path = get_default_file_path();
         has_logger_object = false;
@@ -195,6 +196,10 @@ CODE:
         if ( (svp = hv_fetchs(opts, "level", FALSE)) ) {
             if (!SvIOK(*svp)) croak("invalid log level: should be one integer");
             mylogger->level = (logLevel) SvIV(*svp);
+        }
+        if ( (svp = hv_fetchs(opts, "quiet", FALSE)) ) {
+            if (!SvIOK(*svp)) croak("invalid quiet value: should be one integer 0 or 1");
+            mylogger->quiet = (logLevel) SvIV(*svp);
         }
         if ( (svp = hv_fetchs(opts, "logfile", FALSE)) || (svp = hv_fetchs(opts, "path", FALSE)) ) {
             STRLEN len;
@@ -398,6 +403,7 @@ ALIAS:
      XS::Logger::get_pid               = 1
      XS::Logger::use_color             = 2
      XS::Logger::get_level             = 3
+     XS::Logger::get_quiet             = 4
 PREINIT:
     MyLogger* mylogger;
 CODE:
@@ -414,6 +420,9 @@ CODE:
         case 3:
              RETVAL = newSViv( (int) mylogger->level );
         break;
+        case 4:
+             RETVAL = newSViv( (int) mylogger->quiet );
+        break;
         default:
              XSRETURN_EMPTY;
      }
@@ -427,6 +436,7 @@ xlog_setters(self, value)
     SV* value;
 ALIAS:
      XS::Logger::set_level             = 1
+     XS::Logger::set_quiet             = 2
 PREINIT:
     MyLogger* mylogger;
 CODE:
@@ -437,6 +447,10 @@ CODE:
         case 1:
             if ( !SvIOK(value) ) croak("invalid level: must be interger.");
              mylogger->level = SvIV(value);
+        break;
+        case 2:
+            if ( !SvIOK(value) ) croak("invalid quiet value: must be interger.");
+             mylogger->quiet = SvIV(value);
         break;
         default:
              croak("undefined setter");
