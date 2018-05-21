@@ -12,21 +12,6 @@
 #include <unistd.h>
 #include "logger.h"
 
-static const char *DEFAULT_LOG_FILE = "/var/log/xslogger.log";
-/* some constants */
-static const char *LOG_LEVEL_NAMES[] = {
-  "DEBUG", "INFO", "WARN", "ERROR", "FATAL" /* , "DISABLE" */
-};
-static const char *LOG_LEVEL_NAMES_lc[] = {
-  "debug", "info", "warn", "error", "fatal" /* , "disable" */
-};
-static const char *END_COLOR = "\x1b[0m";
-static const char *LEVEL_COLORS[] = {
-  "\x1b[94m", "\x1b[36m", "\x1b[33m", "\x1b[1;31m", "\x1b[1;35m" /* "\x1b[1;35m"  */
-};
-
-static const char *EMPTY_STR = "";
-
 char*
 get_default_file_path() {
     char *path;
