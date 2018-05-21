@@ -14,11 +14,31 @@
 
 /* function exposed to the module */
 /* maybe a bad idea to use a prefix */
-
+/* https://www.lemoda.net/perl/perl-xs-object/index.html */
 
 MODULE = XS__Logger    PACKAGE = XS::Logger PREFIX = xlog_
 
-SV*
+TYPEMAP: <<HERE
+
+MyLogger*  T_PTROBJ
+XS::Logger T_PTROBJ
+
+OUTPUT
+
+O_OBJECT
+   sv_setref_pv( $arg, CLASS, (void*)$var );
+
+INPUT
+
+O_OBJECT
+   if ( sv_isobject($arg) && (SvTYPE(SvRV($arg)) == SVt_PVMG) )
+     $var = ($type)SvIV((SV*)SvRV( $arg ));
+   else
+     croak( "${Package}::$func_name() -- $var is not a blessed SV reference" );
+
+HERE
+
+XS::Logger
 xlog_new(class)
     char* class;
 PREINIT:
@@ -26,12 +46,16 @@ PREINIT:
         SV*            obj;
 CODE:
 {
-    Newxz( mylogger, 1, MyLogger ); /* malloc our object */
-    RETVAL = newSViv(0);
-    obj = newSVrv(RETVAL, class); /* bless our object */
+    //Newxz( mylogger, 1, MyLogger ); /* malloc our object */
+    //RETVAL = mylogger;
+    RETVAL = calloc (1, sizeof(MyLogger) );
+    //RETVAL = newSViv(0);
+    //obj = newSVrv(RETVAL, class); /* bless our object */
 
-    sv_setiv(obj, PTR2IV(mylogger)); /* get a pointer to our malloc object */
-    SvREADONLY_on(obj);
+    //sv_setiv(obj, PTR2IV(mylogger)); /* get a pointer to our malloc object */
+    //SvREADONLY_on(obj);
+
+    // RETVAL = calloc (1, sizeof (MyLogger));
 }
 OUTPUT:
     RETVAL
@@ -51,28 +75,8 @@ OUTPUT:
 	RETVAL
 
 void xlog_DESTROY(self)
-    SV* self;
-PREINIT:
-        I32* temp;
-        MyLogger* mylogger;
-PPCODE:
-{
-	char buffer[255];
-        //temp = PL_markstack_ptr++;
-
-        if ( self && SvROK(self) && SvOBJECT(SvRV(self)) ) { /* check if self is an object */
-            mylogger = INT2PTR(MyLogger*, SvIV(SvRV(self)));
-
-            /* free the logger... maybe more to clear from struct */
-            Safefree(mylogger);
-        }
-
-        // if (PL_markstack_ptr != temp) {
-        //     /* truly void, because dXSARGS not invoked */
-        //     PL_markstack_ptr = temp;
-        //     XSRETURN_EMPTY;
-        //     /* return empty stack */
-        // }  /* must have used dXSARGS; list context implied */        
-
-        return;  /* assume stack size is correct */
-}
+    XS::Logger self;
+CODE:
+	if (self) {
+		free(self);	
+	}

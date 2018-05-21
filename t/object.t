@@ -13,10 +13,11 @@ use Test2::Plugin::NoWarnings;
 
 use XS::Logger;
 
-my $logger = XS::Logger->new();
-isa_ok $logger, 'XS::Logger';
-
-$logger->DESTROY;
+{
+	my $logger = XS::Logger->new();
+	isa_ok $logger, 'XS::Logger';
+	undef $logger;
+}
 
 done_testing;
 

@@ -23,4 +23,7 @@
      logLevel level; /* only display what is after the log level (included) */
  } MyLogger;
 
+typedef MyLogger * XS__Logger;
+
 #endif /* XS_LOGGER_H */
+
