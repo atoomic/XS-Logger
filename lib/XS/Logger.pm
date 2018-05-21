@@ -93,9 +93,8 @@ Setting the level can be done at construction time or run time
                                        # or FATAL_LOG_LEVEL
                                        # or DISABLE_LOG_LEVEL
                                   color  => 1,
-                                  path   => q{/var/log/xslogger.log,
+                                  path   => q{/var/log/xslogger.log},
                                   quiet  => 1, # default value=0, disable messages on stderr in addition to the log itself
-                                }
                                } );
 
      $log->get_level() == XS::Logger::INFO_LOG_LEVEL or ...;
