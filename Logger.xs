@@ -17,6 +17,27 @@
 MODULE = XS__Logger    PACKAGE = XS::Logger PREFIX = xlog_
 
 SV*
+xlog_new(class)
+    char* class;
+PREINIT:
+        MyLogger* mylogger;
+        SV*            obj;
+        HV*           opts = NULL;
+        SV **svp;
+CODE:
+{
+    Newxz( mylogger, 1, MyLogger); /* malloc our object */
+    RETVAL = newSViv(0);
+    obj = newSVrv(RETVAL, class); /* bless our object */
+
+    sv_setiv(obj, PTR2IV(mylogger)); /* get a pointer to our malloc object */
+    SvREADONLY_on(obj);
+}
+OUTPUT:
+    RETVAL
+
+
+SV*
 xlog_sum(a, b)
     SV* a;
     SV* b;
