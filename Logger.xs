@@ -42,6 +42,7 @@ CODE:
 
     /* default (non zero) values */
     mylogger->use_color = true; /* maybe use a GV from the stash to set the default value */
+    
     if ( opts ) {
         if ( (svp = hv_fetchs(opts, "color", FALSE)) ) {
             if (!SvIOK(*svp)) croak("invalid color option value: should be a boolean 1/0");
@@ -66,6 +67,10 @@ CODE:
             strcpy(mylogger->filepath, src); /* do a copy to the object */
         }
     }
+
+    if ( *mylogger->filepath == 0 ) {
+    	strcpy(mylogger->filepath, SvPV_nolen(get_sv("XS::Logger::PATH_FILE", FALSE)) );
+    }
 }
 OUTPUT:
     RETVAL
@@ -81,7 +86,11 @@ ALIAS:
      XS::Logger::get_level             = 3
      XS::Logger::get_quiet             = 4
      XS::Logger::quiet                 = 4
-     XS::Logger::debug                 = 5
+	 XS::Logger::get_logfile           = 5
+	 XS::Logger::logfile               = 5
+	 XS::Logger::filepath              = 5
+	 XS::Logger::get_filepath          = 5
+     XS::Logger::debug                 = 99
 CODE:
 { 
     switch (ix) {
@@ -96,6 +105,9 @@ CODE:
         break;
         case 4:
              RETVAL = newSViv( (int) self->quiet );
+        break;
+        case 5:
+             RETVAL = newSVpv( (char*) self->filepath, strlen(self->filepath) );
         break;
         default:
              XSRETURN_EMPTY;

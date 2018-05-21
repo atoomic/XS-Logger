@@ -51,7 +51,21 @@ is XS::Logger::DEBUG_LOG_LEVEL, 0, "DEBUG_LOG_LEVEL";
 is XS::Logger::INFO_LOG_LEVEL, 1, "INFO_LOG_LEVEL";
 is XS::Logger::WARN_LOG_LEVEL, 2, "WARN_LOG_LEVEL";
 
+
+use XS::Logger;
+
+
 is $XS::Logger::PATH_FILE, "/var/log/xslogger.log";
+
+my $logger1 = XS::Logger->new( );
+is $logger1->logfile, '/var/log/xslogger.log';
+
+my $logger2 = XS::Logger->new( { logfile => q[/there] } );
+is $logger2->logfile, '/there';
+
+is $logger1->logfile, '/var/log/xslogger.log';
+
+
 
 # # avoid using harcoded value
 # $logger = XS::Logger->new( { level => 1 } );
