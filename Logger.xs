@@ -7,14 +7,9 @@
 // load here any C library you want
 #include <stdlib.h>
 #include <unistd.h>
-// ...
 
 // your own .h file or add your declaration directly there
 #include "logger.h"
-
-/* function exposed to the module */
-/* maybe a bad idea to use a prefix */
-/* https://www.lemoda.net/perl/perl-xs-object/index.html */
 
 MODULE = XS__Logger    PACKAGE = XS::Logger PREFIX = xlog_
 
@@ -38,6 +33,7 @@ CODE:
 }
 OUTPUT:
     RETVAL
+
 
 void xlog_DESTROY(self)
     XS::Logger self;

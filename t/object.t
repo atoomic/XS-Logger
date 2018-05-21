@@ -22,6 +22,8 @@ use XS::Logger;
 done_testing;
 
 
+
+
 __END__
 
 # is $logger->get_pid(),   0, "get_pid = 0 by default";
