@@ -26,16 +26,9 @@ PREINIT:
         SV*            obj;
 CODE:
 {
-    //Newxz( mylogger, 1, MyLogger ); /* malloc our object */
-    mylogger = malloc( sizeof(MyLogger) );
+    Newxz( mylogger, 1, MyLogger ); /* malloc our object */
     RETVAL = newSViv(0);
     obj = newSVrv(RETVAL, class); /* bless our object */
-
-
-    char buffer[255];
-            sprintf( buffer, "new --- %x\n", (long int) mylogger );
-            warn( buffer );
-
 
     sv_setiv(obj, PTR2IV(mylogger)); /* get a pointer to our malloc object */
     SvREADONLY_on(obj);
@@ -70,11 +63,8 @@ PPCODE:
         if ( self && SvROK(self) && SvOBJECT(SvRV(self)) ) { /* check if self is an object */
             mylogger = INT2PTR(MyLogger*, SvIV(SvRV(self)));
 
-            sprintf( buffer, "destroy %x\n", (long int) mylogger );
-            warn( buffer );
             /* free the logger... maybe more to clear from struct */
-            free(mylogger);
-
+            Safefree(mylogger);
         }
 
         // if (PL_markstack_ptr != temp) {
