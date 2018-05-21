@@ -51,6 +51,7 @@ is XS::Logger::DEBUG_LOG_LEVEL, 0, "DEBUG_LOG_LEVEL";
 is XS::Logger::INFO_LOG_LEVEL, 1, "INFO_LOG_LEVEL";
 is XS::Logger::WARN_LOG_LEVEL, 2, "WARN_LOG_LEVEL";
 
+is $XS::Logger::PATH_FILE, "/var/log/xslogger.log";
 
 # # avoid using harcoded value
 # $logger = XS::Logger->new( { level => 1 } );

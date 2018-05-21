@@ -14,6 +14,7 @@
          LOG_DISABLE  /* 5 - disable all log events - should be preserved in last position */
  } logLevel;
 
+
  typedef struct {
      bool use_color;
      bool quiet; /* do not display messages on stderr when quiet mode enabled */
@@ -24,6 +25,8 @@
  } MyLogger;
 
 typedef MyLogger * XS__Logger;
+
+static const char *DEFAULT_LOG_FILE = "/var/log/xslogger.log";
 
 #endif /* XS_LOGGER_H */
 

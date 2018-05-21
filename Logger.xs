@@ -150,6 +150,12 @@ BOOT:
     newCONSTSUB(stash, "ERROR_LOG_LEVEL", newSViv( LOG_ERROR ) );
     newCONSTSUB(stash, "FATAL_LOG_LEVEL", newSViv( LOG_FATAL ) );
     newCONSTSUB(stash, "DISABLE_LOG_LEVEL", newSViv( LOG_DISABLE ) );
+
+    sv = get_sv("XS::Logger::PATH_FILE", GV_ADD|GV_ADDMULTI);
+    if ( ! SvPOK(sv) ) { /* preserve any value set before loading the module */
+        SvREFCNT_inc(sv);
+        sv_setpv(sv, DEFAULT_LOG_FILE);
+    }
 }	
 
 
