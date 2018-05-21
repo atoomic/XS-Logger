@@ -155,21 +155,25 @@ do_log(MyLogger *mylogger, logLevel level, const char *fmt, int num_args, ...) {
 /* function exposed to the module */
 /* maybe a bad idea to use a prefix */
 MODULE = XS__Logger    PACKAGE = XS::Logger PREFIX = xlog_
-SV*
+
+TYPEMAP: <<HERE
+
+MyLogger*  T_PTROBJ
+XS::Logger T_PTROBJ
+
+HERE
+
+XS::Logger
 xlog_new(class, ...)
     char* class;
 PREINIT:
         MyLogger* mylogger;
-        SV*            obj;
         HV*           opts = NULL;
         SV **svp;
 CODE:
 {
-    char tmpbuf[256] = {0};
-
-    Newxz( mylogger, 1, MyLogger); /* malloc our object */
-    RETVAL = newSViv(0);
-    obj = newSVrv(RETVAL, class); /* bless our object */
+    Newxz( mylogger, 1, MyLogger );
+    RETVAL = mylogger;
 
     if( items > 1 ) { /* could also probably use va_start, va_list, ... */
         SV *extra = (SV*) ST(1);
@@ -204,9 +208,6 @@ CODE:
             strcpy(mylogger->filepath, src); /* do a copy to the object */
         }
     }
-
-    sv_setiv(obj, PTR2IV(mylogger)); /* get a pointer to our malloc object */
-    SvREADONLY_on(obj);
 }
 OUTPUT:
     RETVAL
