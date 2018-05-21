@@ -22,8 +22,6 @@ xlog_new(class)
 PREINIT:
         MyLogger* mylogger;
         SV*            obj;
-        HV*           opts = NULL;
-        SV **svp;
 CODE:
 {
     Newxz( mylogger, 1, MyLogger); /* malloc our object */
