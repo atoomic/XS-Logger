@@ -16,6 +16,13 @@ use XS::Logger;
 my $logger = XS::Logger->new();
 isa_ok $logger, 'XS::Logger';
 
+$logger->DESTROY;
+
+done_testing;
+
+
+__END__
+
 # is $logger->get_pid(),   0, "get_pid = 0 by default";
 # is $logger->use_color(), 1, "use_color = 1 by default";
 
@@ -24,5 +31,3 @@ isa_ok $logger, 'XS::Logger';
 # $logger = XS::Logger->new( { color => 0 } );
 # isa_ok $logger, 'XS::Logger';
 # is $logger->use_color(), 0, "use_color = 0";
-
-done_testing;
