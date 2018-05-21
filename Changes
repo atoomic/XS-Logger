@@ -1,5 +1,7 @@
 {{$NEXT}}
 
+* fix DESTROY which was not correctly plugged
+* use typemap to simplify XS subs
 * update croak format on fatal/panic
 * implement quiet mode for object code
 * log on stderr in addition to the logfile unless quiet mode enabled
