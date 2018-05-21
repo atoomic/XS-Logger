@@ -458,22 +458,20 @@ CODE:
      XSRETURN_EMPTY;
 }
 
-void DESTROY(self)
-    SV* self;
+void xlog_DESTROY(self)
+    XS::Logger self;
 PREINIT:
         I32* temp;
-        MyLogger* mylogger;
 PPCODE:
 {
         temp = PL_markstack_ptr++;
 
-        if ( self && SvROK(self) && SvOBJECT(SvRV(self)) ) { /* check if self is an object */
-            mylogger = INT2PTR(MyLogger*, SvIV(SvRV(self)));
+        if ( self ) {
             /* close the file fhandle on destroy if exists */
-            if ( mylogger->fhandle )
-                fclose( mylogger->fhandle );
+            if ( self->fhandle )
+                fclose( self->fhandle );
             /* free the logger... maybe more to clear from struct */
-            free(mylogger);
+            Safefree(self);
         }
 
         if (PL_markstack_ptr != temp) {
