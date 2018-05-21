@@ -432,7 +432,7 @@ OUTPUT:
 
 void
 xlog_setters(self, value)
-    SV* self;
+    XS::Logger self;
     SV* value;
 ALIAS:
      XS::Logger::set_level             = 1
@@ -441,16 +441,15 @@ PREINIT:
     MyLogger* mylogger;
 CODE:
 {   /* improve protection on self/logger here */
-    mylogger = INT2PTR(MyLogger*, SvIV(SvRV(self)));
-
+ 
     switch (ix) {
         case 1:
             if ( !SvIOK(value) ) croak("invalid level: must be interger.");
-             mylogger->level = SvIV(value);
+             self->level = SvIV(value);
         break;
         case 2:
             if ( !SvIOK(value) ) croak("invalid quiet value: must be interger.");
-             mylogger->quiet = SvIV(value);
+             self->quiet = SvIV(value);
         break;
         default:
              croak("undefined setter");
