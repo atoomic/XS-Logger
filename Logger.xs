@@ -392,7 +392,7 @@ CODE:
 
 SV*
 xlog_getters(self)
-    SV* self;
+    XS::Logger self;
 ALIAS:
      XS::Logger::get_pid               = 1
      XS::Logger::use_color             = 2
@@ -405,23 +405,22 @@ PREINIT:
     char *fp;
 CODE:
 {   /* some getters: mainly used for test for now to access internals */
-    mylogger = INT2PTR(MyLogger*, SvIV(SvRV(self)));
 
     switch (ix) {
         case 1:
-             RETVAL = newSViv( mylogger->pid );
+             RETVAL = newSViv( self->pid );
         break;
         case 2:
-             RETVAL = newSViv( mylogger->use_color );
+             RETVAL = newSViv( self->use_color );
         break;
         case 3:
-             RETVAL = newSViv( (int) mylogger->level );
+             RETVAL = newSViv( (int) self->level );
         break;
         case 4:
-             RETVAL = newSViv( (int) mylogger->quiet );
+             RETVAL = newSViv( (int) self->quiet );
         break;
         case 5:
-        	 fp = _file_path_for_logger( mylogger );
+        	 fp = _file_path_for_logger( self );
              RETVAL = newSVpv( fp, strlen(fp) );
         break;        
         default:
