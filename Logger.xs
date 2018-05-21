@@ -25,6 +25,14 @@ get_default_file_path() {
     return path;
 }
 
+char*
+_file_path_for_logger(MyLogger *self) {
+	if ( strlen(self->filepath) )
+		return self->filepath;
+	else
+		return get_default_file_path();
+}
+
 /* c internal functions */
 void
 do_log(MyLogger *mylogger, logLevel level, const char *fmt, int num_args, ...) {
@@ -51,10 +59,7 @@ do_log(MyLogger *mylogger, logLevel level, const char *fmt, int num_args, ...) {
 
     /* Note: *mylogger can be a NULL pointer => would fall back to a GV string or a constant from .c to get the filename */
     if ( mylogger ) { /* we got a mylogger pointer */
-        if ( mylogger->filepath > 0 && strlen(mylogger->filepath) )
-            path = mylogger->filepath;
-        else
-            path = get_default_file_path();
+        path = _file_path_for_logger( mylogger );
 
         if ( mylogger->pid && mylogger->pid != pid ) {
             if (mylogger->fhandle) fclose(mylogger->fhandle);
@@ -392,8 +397,11 @@ ALIAS:
      XS::Logger::use_color             = 2
      XS::Logger::get_level             = 3
      XS::Logger::get_quiet             = 4
+     XS::Logger::get_file_path         = 5
+     XS::Logger::logfile               = 5
 PREINIT:
     MyLogger* mylogger;
+    char *fp;
 CODE:
 {   /* some getters: mainly used for test for now to access internals */
     mylogger = INT2PTR(MyLogger*, SvIV(SvRV(self)));
@@ -411,6 +419,10 @@ CODE:
         case 4:
              RETVAL = newSViv( (int) mylogger->quiet );
         break;
+        case 5:
+        	 fp = _file_path_for_logger( mylogger );
+             RETVAL = newSVpv( fp, strlen(fp) );
+        break;        
         default:
              XSRETURN_EMPTY;
      }
