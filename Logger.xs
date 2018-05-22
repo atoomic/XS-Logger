@@ -123,7 +123,7 @@ do_log(MyLogger *mylogger, logLevel level, const char *fmt, int num_args, ...) {
                     croak("dollar_0 is not a string?!");
             }
             str_dollar_0 = SvPV_nolen( dollar_0 );
-            M_FPRINTF( fhandle, " %u [%s] ", (unsigned int) pid, str_dollar_0 ); /* print the source */
+            M_FPRINTF( fhandle, " %d [%s] ", (int) pid, str_dollar_0 ); /* print the source */
             /* with the pid ? */
             /* fprintf( fhandle, " [%u %s] ", (unsigned int) pid, str_dollar_0 ); */
         }
