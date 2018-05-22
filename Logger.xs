@@ -155,6 +155,7 @@ do_log(MyLogger *mylogger, logLevel level, const char *fmt, int num_args, ...) {
 /* function exposed to the module */
 /* maybe a bad idea to use a prefix */
 MODULE = XS__Logger    PACKAGE = XS::Logger PREFIX = xlog_
+PROTOTYPES: ENABLE
 
 TYPEMAP: <<HERE
 
