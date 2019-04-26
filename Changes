@@ -1,5 +1,7 @@
 {{$NEXT}}
 
+a simple test
+
 0.005     2018-05-21 16:55:35-06:00 America/Denver
 
 * fix DESTROY which was not correctly plugged
